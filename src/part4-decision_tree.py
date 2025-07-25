@@ -16,3 +16,25 @@ import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.model_selection import StratifiedKFold as KFold_strat
 from sklearn.tree import DecisionTreeClassifier as DTC
+
+def run_decision_tree(df_arrests=None):
+    if df_arrests is None:
+        df_arrests = pd.read_csv("data/df_arrests_lr.csv")
+
+    features = ['num_fel_arrests_last_year', 'current_charge_felony']
+    X = df_arrests[features]
+    y = df_arrests['y']
+
+    param_grid_dt = {'max_depth': [2, 4, 6, 8]}
+
+    model = DTC(random_state=42)
+    gs_cv_dt = GridSearchCV(model, param_grid_dt, cv=5)
+    gs_cv_dt.fit(X, y)
+
+    print("Best max_depth for Decision Tree:", gs_cv_dt.best_params_['max_depth'])
+
+    df_arrests['pred_dt'] = gs_cv_dt.predict_proba(X)[:, 1]
+
+    df_arrests.to_csv("data/df_arrests_dt.csv", index=False)
+
+    return df_arrests
