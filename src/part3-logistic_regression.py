@@ -21,5 +21,28 @@ from sklearn.linear_model import LogisticRegression as lr
 
 
 # Your code here
+def run_logistic_regression(df_arrests=None):
+    if df_arrests is None:
+        df_arrests = pd.read_csv("data/df_arrests.csv")
 
+    features = ['num_fel_arrests_last_year', 'current_charge_felony']
+    X = df_arrests[features]
+    y = df_arrests['y']
 
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, stratify=y, shuffle=True, random_state=42
+    )
+
+    param_grid = {'C': [0.01, 0.1, 1, 10]}
+    model = lr(solver='liblinear')
+
+    gs_cv = GridSearchCV(model, param_grid, cv=5)
+    gs_cv.fit(X_train, y_train)
+
+    print("Best C for Logistic Regression:", gs_cv.best_params_['C'])
+
+    df_arrests.loc[X_test.index, 'pred_lr'] = gs_cv.predict_proba(X_test)[:, 1]
+
+    df_arrests.to_csv("data/df_arrests_lr.csv", index=False)
+
+    return df_arrests
