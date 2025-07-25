@@ -16,30 +16,29 @@ Do both metrics agree that one model is more accurate than the other? Print this
 from sklearn.calibration import calibration_curve
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
+import pandas as pd
 
-# Calibration plot function 
-def calibration_plot(y_true, y_prob, n_bins=10):
-    """
-    Create a calibration plot with a 45-degree dashed line.
+def calibration_plot(y_true, y_prob, name, n_bins=5):
+    true_prob, pred_prob = calibration_curve(y_true, y_prob, n_bins=n_bins)
 
-    Parameters:
-        y_true (array-like): True binary labels (0 or 1).
-        y_prob (array-like): Predicted probabilities for the positive class.
-        n_bins (int): Number of bins to divide the data for calibration.
-
-    Returns:
-        None
-    """
-    #Calculate calibration values
-    bin_means, prob_true = calibration_curve(y_true, y_prob, n_bins=n_bins)
-    
-    #Create the Seaborn plot
-    sns.set(style="whitegrid")
     plt.plot([0, 1], [0, 1], "k--")
-    plt.plot(prob_true, bin_means, marker='o', label="Model")
-    
-    plt.xlabel("Mean Predicted Probability")
-    plt.ylabel("Fraction of Positives")
+    plt.plot(pred_prob, true_prob, marker="o", label=name)
+
+def run_calibration_plot(df=None):
+    if df is None:
+        df = pd.read_csv("data/df_arrests_dt.csv")
+
+    y = df["y"]
+
+    if not os.path.exists("plots"):
+        os.makedirs("plots")
+
+    plt.figure(figsize=(6, 6))
+    calibration_plot(y, df["pred_lr"], "Logistic Regression")
+    calibration_plot(y, df["pred_dt"], "Decision Tree")
+    plt.legend()
     plt.title("Calibration Plot")
-    plt.legend(loc="best")
-    plt.show()
+
+    plt.savefig("plots/calibration_plot.png")
+    print("saved calibration plot to plots/")
