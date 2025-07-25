@@ -17,10 +17,30 @@ PART 2: Pre-processing
 '''
 
 # import the necessary packages
-
-
+import pandas as pd
 
 # Your code here
+def run_preprocessing():
+    pred_universe = pd.read_csv("data/pred_universe_raw.csv")
+    arrest_events = pd.read_csv("data/arrest_events_raw.csv")
 
+    df_arrests = pd.merge(pred_universe, arrest_events, on="person_id", how="outer")
+
+    df_arrests['y'] = (df_arrests['charge_degree'] == 'felony').astype(int)
+    print("Share rearrested for felony in next year:",
+          df_arrests['y'].mean())
+
+    df_arrests['current_charge_felony'] = (df_arrests['charge_degree'] == 'felony').astype(int)
+    print("Share of current charges that are felonies:",
+          df_arrests['current_charge_felony'].mean())
+
+    df_arrests['num_fel_arrests_last_year'] = df_arrests.groupby('person_id')['y'].transform('sum')
+    print("Average felony arrests in last year:",
+          df_arrests['num_fel_arrests_last_year'].mean())
+
+    df_arrests.to_csv("data/df_arrests.csv", index=False)
+    print("Preprocessing completed: df_arrests saved")
+
+    return df_arrests
 
 
